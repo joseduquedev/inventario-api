@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from modelos import Producto, ProductoDB
 from database import engine, Base, get_db
+
+from typing import Optional
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,10 +19,21 @@ contador_id= 1
 def inicio():
     return {"mensaje": "Api de inventario en proceso de desarrollo"}
 
+
+
+@app.get("/productos/{producto_id}")
+def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
+    item = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return item
+
 @app.get("/productos")
-def listar_productos(db: Session = Depends(get_db)):
-    #return inventario
-    return db.query(ProductoDB).all()
+def listar_productos(nombre: Optional[str] = None , db: Session = Depends(get_db)):
+    query = db.query(ProductoDB)
+    if nombre:
+        query = query.filter(ProductoDB.nombre.ilike(f"%{nombre}%"))
+    return query.all()
 
 @app.post("/productos")
 def crear_producto(producto: Producto, db: Session = Depends(get_db)):
@@ -39,7 +52,7 @@ def crear_producto(producto: Producto, db: Session = Depends(get_db)):
 def actualizar_producto(producto_id: int, producto: Producto, db: Session = Depends(get_db)):
     item = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
     if item is None:
-        return {"error": "Producto no encontrado"}
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
     item.nombre = producto.nombre
     item.descripcion = producto.descripcion
     item.precio = producto.precio
@@ -53,39 +66,8 @@ def actualizar_producto(producto_id: int, producto: Producto, db: Session = Depe
 def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
     item = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
     if item is None:
-        return {"error": "Producto no encontrado"}
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
     db.delete(item)
     db.commit()
     return {"mensaje": "Producto eliminado", "producto": item}
-
-'''
-@app.post("/productos")
-def crear_producto(producto: Producto):
-    global contador_id
-    nuevo_producto = producto.model_dump()
-    nuevo_producto["id"] = contador_id
-    contador_id += 1
-    inventario.append(nuevo_producto)
-    return {"mensaje": "Producto creado", "producto": producto}
-
-
-@app.put("/productos/{producto_id}")
-def actualizar_producto(producto_id: int, producto: Producto):
-    for item in inventario:
-        if item["id"]== producto_id:
-            item["nombre"] = producto.nombre
-            item["descripcion"] = producto.descripcion
-            item["precio"] = producto.precio
-            item["cantidad_disponible"] = producto.cantidad_disponible
-            return {"mensaje": "Producto actualizado" , "producto": item}
-    return {"error": "Producto no encontrado"}
-
-@app.delete("/productos/{producto_id}")
-def eliminar_producto(producto_id: int):
-    for item in inventario:
-        if item["id"] == producto_id:
-            inventario.remove(item)
-            return {"mensaje": "Producto eliminado" , "producto": item}
-    return {"error": "Producto no encontrado"}
-'''
 

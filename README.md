@@ -58,7 +58,7 @@ Activar el entorno virtual:
 
 Instalar dependencias:
 ```bash
-pip install fastapi uvicorn sqlalchemy
+pip install -r requirements.txt
 ```
 
 Ejecutar el servidor:

@@ -19,3 +19,18 @@ class Producto(BaseModel):
     precio: float
     cantidad_disponible: int
 
+
+# ---- Modelo SQLAlchemy: tabla de usuarios ----
+class UsuarioDB(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+
+
+# ---- Modelo Pydantic: datos que recibe el endpoint de registro ----
+class UsuarioRegistro(BaseModel):
+    email: str
+    password: str
+

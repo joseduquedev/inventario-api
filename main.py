@@ -5,6 +5,9 @@ from database import engine, Base, get_db
 
 from typing import Optional
 
+from modelos import Producto, ProductoDB, UsuarioDB, UsuarioRegistro
+from auth import hashear_password
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -70,4 +73,20 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"mensaje": "Producto eliminado", "producto": item}
+
+
+@app.post("/usuarios")
+def registrar_usuario(usuario: UsuarioRegistro, db: Session = Depends(get_db)):
+    usuario_existente = db.query(UsuarioDB).filter(UsuarioDB.email == usuario.email).first()
+    if usuario_existente:
+        raise HTTPException(status_code=400, detail="Ese email ya está registrado")
+
+    nuevo_usuario = UsuarioDB(
+        email=usuario.email,
+        password_hash=hashear_password(usuario.password)
+    )
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+    return {"mensaje": "Usuario registrado con éxito", "email": nuevo_usuario.email}
 

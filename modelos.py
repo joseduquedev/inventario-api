@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import Column, Integer, String, Float
 from database import Base
 
@@ -31,6 +32,19 @@ class UsuarioDB(Base):
 
 # ---- Modelo Pydantic: datos que recibe el endpoint de registro ----
 class UsuarioRegistro(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def validar_password(cls, valor: str) -> str:
+        if len(valor) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        if not re.search(r"[0-9]", valor):
+            raise ValueError("La contraseña debe tener al menos un número")
+        if not re.search(r"[A-Z]", valor):
+            raise ValueError("La contraseña debe tener al menos una mayúscula")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=]", valor):
+            raise ValueError("La contraseña debe tener al menos un carácter especial")
+        return valor
 

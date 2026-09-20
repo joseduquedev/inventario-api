@@ -142,6 +142,24 @@ de datos real.
 - Clave secreta gestionada por variables de entorno (no expuesta en 
   el código)
 
+
+## Ejecutarlo con Docker (alternativa)
+
+Requiere tener Docker instalado.
+
+Construir la imagen:
+```bash
+docker build -t inventario-api .
+```
+
+Crear el archivo `.env` con tu `SECRET_KEY` (ver instrucciones arriba), 
+y ejecutar el contenedor:
+```bash
+docker run -p 8000:8000 --env-file .env inventario-api
+```
+
+La API queda disponible en `http://127.0.0.1:8000/docs`.
+
 ## Autor
 
 **José Humberto Duque Castiblanco**  
